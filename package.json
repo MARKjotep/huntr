@@ -1,0 +1,32 @@
+{
+  "name": "huntr",
+  "version": "0.0.1",
+  "description": "Huntr JS framework",
+  "author": "Marky <markjotep@gmail.com>",
+  "license": "MIT",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "util": "cp -r ../misc/util ./",
+    "dirs": "for dir in ./src ./dist ./test ./util ./types; do mkdir -p $dir; done",
+    "@": "ln -sf ../../misc/@/ ./src",
+    "ts": "ln -sf ../misc/tsconfig.json ./;",
+    "init": "bun run dirs && bun run util && bun run @ && bun run ts;",
+    "build": "rm -r ./types ; tsc && bun build ./src/index.ts --outdir ./dist --minify --packages external --target browser && rollup -c ./util/rollup.config.js"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "rollup": "^4.46.2",
+    "rollup-plugin-dts": "^6.2.1"
+  },
+  "peerDependencies": {
+    "typescript": "^5.7.3"
+  },
+  "directories": {
+    "test": "test"
+  },
+  "type": "module"
+}
