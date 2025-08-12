@@ -1,3 +1,3 @@
-# Yve JS framework
+# Huntr JS framework
 
 Frontend development.
