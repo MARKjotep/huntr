@@ -1,65 +1,211 @@
-/*
--------------------------
+import { V } from "./@";
+import { doc } from "./doc";
+import { baseAttr, c_events, Dom, Elements, X3 } from "./dom";
+import { Huntr } from "./huntr";
+import { Stateful } from "./stateful";
 
--------------------------
-*/
+declare global {
+  type events<T extends Elements = HTMLElement> = {
+    [P in keyof GlobalEventHandlersEventMap]?: (
+      this: T,
+      e: GlobalEventHandlersEventMap[P],
+    ) => void;
+  } & c_events<T>;
+  type attr = baseAttr | obj<X3>;
+  type ctx = V | Dom | Stateful<V | Dom> | ctx[];
+  type obj<T> = Record<string, T>;
+  type dom = Dom;
+  type DomFN<T = {}> = (a: attr & T, ...D: ctx[]) => Dom;
 
-interface appType {
-  base?: string;
-}
+  const BASE_STRING: string;
 
-interface renderApp {
-  class?: string | string[];
-  id?: string;
-  data?: any;
-}
+  namespace JSX {
+    type Element = Dom;
 
-class head {}
+    interface IntrinsicElements {
+      // Head -----
+      link: attr;
+      base: attr;
+      meta: attr;
 
-/**
- * Render body if import was not available or returns undefined/voic
- */
-class doc extends head {
-  import?: any;
-  async fetch?(): Promise<Record<string, any>>;
-  head() {}
-  body() {}
-}
+      // Basic ----------------------------------
+      p: attr;
+      br: attr;
+      hr: attr;
+      h: attr;
+      cmnt: attr;
+      root: attr;
+      // Styles and Semantics ----------------------------------
+      html: attr;
+      body: attr;
+      div: attr;
+      span: attr;
+      header: attr;
+      hgroup: attr;
+      footer: attr;
+      main: attr;
+      section: attr;
+      search: attr;
+      article: attr;
+      aside: attr;
+      details: attr;
+      dialog: attr;
+      summary: attr;
+      data: attr;
+      // Programming ----------------------------------
+      noscript: attr;
+      object: attr;
+      param: attr;
+      script: attr;
+      // Links ----------------------------------
+      a: attr;
+      nav: attr;
+      style: attr;
+      // Audio / Video ----------------------------------
+      audio: attr;
+      video: attr;
+      source: attr;
+      track: attr;
+      // Images ----------------------------------
+      img: attr;
+      map: attr;
+      area: attr;
+      canvas: attr;
+      figcaption: attr;
+      figure: attr;
+      picture: attr;
+      // IFrame ----------------------------------
+      iframe: attr;
+      // Forms and Input ----------------------------------
+      form: attr;
+      input: attr;
+      textarea: attr;
+      button: attr;
+      select: attr;
+      optgroup: attr;
+      option: attr;
+      label: attr;
+      fieldset: attr;
+      legend: attr;
+      datalist: attr;
+      // Tables ----------------------------------
+      table: attr;
+      caption: attr;
+      th: attr;
+      tr: attr;
+      td: attr;
+      thead: attr;
+      tbody: attr;
+      tfoot: attr;
+      col: attr;
+      colgroup: attr;
+      // Formatting ----------------------------------
 
-function acv() {}
+      b: attr;
+      i: attr;
+      q: attr;
+      s: attr;
+      u: attr;
+      em: attr;
+      rp: attr;
+      del: attr;
+      dfn: attr;
+      ins: attr;
+      kbd: attr;
+      pre: attr;
+      sub: attr;
+      sup: attr;
+      var: attr;
+      wbr: attr;
+      cite: attr;
+      time: attr;
+      abbr: attr;
+      code: attr;
+      mark: attr;
+      samp: attr;
+      meter: attr;
+      small: attr;
+      strong: attr;
+      address: attr;
+      progress: attr;
+      template: attr;
+      blockquote: attr;
+      // List ----------------------------------
+      menu: attr;
+      ul: attr;
+      ol: attr;
+      li: attr;
+      dl: attr;
+      dt: attr;
+      dd: attr;
 
-// Render will wrap it into a div --
-class Huntr {
-  constructor(a?: appType) {}
-  /**
-   *
-   * wrap with div or treat it as DOM.. use the cnfig as its property
-   */
-  async render(x?: renderApp) {}
-}
+      h1: attr;
+      h2: attr;
+      h3: attr;
+      h4: attr;
+      h5: attr;
+      h6: attr;
 
-const APP = new Huntr({
-  base: "",
-});
-
-APP.render({
-  class: "",
-  id: "",
-});
-
-const HUN2 = new Huntr();
-
-// @route("/")
-class acd extends doc {
-  head() {
-    //
-    return {};
-  }
-  body() {
-    /**
-     * when Huntr is returned, then pass the route as its base url.
-     * return "render"
-     */
-    return HUN2;
+      // SVG Elements  ----------------------------------
+      svg: attr;
+      path: attr;
+      circle: attr;
+      animate: attr;
+      animateMotion: attr;
+      animateTransform: attr;
+      clipPath: attr;
+      defs: attr;
+      desc: attr;
+      ellipse: attr;
+      feBlend: attr;
+      feColorMatrix: attr;
+      feComponentTransfer: attr;
+      feComposite: attr;
+      feConvolveMatrix: attr;
+      feDiffuseLighting: attr;
+      feDisplacementMap: attr;
+      feDistantLight: attr;
+      feDropShadow: attr;
+      feFlood: attr;
+      feFuncA: attr;
+      feFuncB: attr;
+      feFuncG: attr;
+      feFuncR: attr;
+      feGaussianBlur: attr;
+      feImage: attr;
+      feMerge: attr;
+      feMergeNode: attr;
+      feMorphology: attr;
+      feOffset: attr;
+      fePointLight: attr;
+      feSpecularLighting: attr;
+      feSpotLight: attr;
+      feTile: attr;
+      feTurbulence: attr;
+      filter: attr;
+      foreignObject: attr;
+      g: attr;
+      image: attr;
+      line: attr;
+      linearGradient: attr;
+      marker: attr;
+      mask: attr;
+      metadata: attr;
+      mpath: attr;
+      pattern: attr;
+      polygon: attr;
+      polyline: attr;
+      radialGradient: attr;
+      rect: attr;
+      set: attr;
+      stop: attr;
+      symbol: attr;
+      text: attr;
+      textPath: attr;
+      title: attr;
+      tspan: attr;
+      use: attr;
+      view: attr;
+    }
   }
 }
