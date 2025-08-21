@@ -8,6 +8,7 @@ import {
   isArr,
   isFN,
   isModule,
+  isNotWindow,
   log,
   oAss,
   V,
@@ -26,6 +27,7 @@ export class doc<T extends docObj = obj<obj<any>>> extends head {
   path: string = "";
   data: T["data"] = {};
   args: T["args"] = {};
+  importArgs: any[] = [];
   fetch?(): maybePromise<obj<any>>;
   head?(): maybePromise<void>;
   body?(): maybePromise<any>;
@@ -40,15 +42,17 @@ export async function docLoader(
     oAss(_doc.data, await _doc.fetch());
   }
   await _doc.head?.();
-
-  return [getBody(await _doc.body?.()), getHeads.call(this, _doc)];
+  return [
+    getBody(await _doc.body?.(), _doc.importArgs),
+    getHeads.call(this, _doc),
+  ];
 }
 
-export function getBody(v?: any): any[] {
+export function getBody(v?: any, args: any[] = []): any[] {
   let val: any = v || "";
   if (isModule(v)) {
     const vd = v.default;
-    val = isFN(vd) ? vd() : vd;
+    val = isFN(vd) ? vd.apply({}, args) : vd;
   }
   return isArr(val) ? val : [val];
 }
@@ -79,3 +83,12 @@ export async function headLoader(head: headType, id: string) {
 export const Unload = (un: (() => void)[]) => {
   un.forEach((un) => un());
 };
+
+export function pushHistory(path?: string, title?: string) {
+  const { pathname, hash } = window.location;
+  const cURL = pathname + hash;
+
+  if (path && cURL !== path) {
+    history.pushState({}, title ?? "", path);
+  }
+}

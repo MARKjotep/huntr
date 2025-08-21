@@ -227,6 +227,7 @@ declare class Storage<T extends MinStorage> {
     constructor();
     set(min: T): void;
     get(path: string): [T | undefined, Record<string, string>];
+    keys(): MapIterator<string>;
 }
 
 declare class Time {
@@ -998,9 +999,36 @@ declare class doc<T extends docObj = obj<obj<any>>> extends head {
     path: string;
     data: T["data"];
     args: T["args"];
+    importArgs: any[];
     fetch?(): maybePromise<obj<any>>;
     head?(): maybePromise<void>;
     body?(): maybePromise<any>;
+}
+
+type ExtraState = Record<string, unknown>;
+type HistoryData<S extends ExtraState = ExtraState> = (S & {
+    path: string;
+}) | null;
+type ChangeHandler<S extends ExtraState> = (path: string, state: HistoryData<S>) => void;
+declare class PathHistory<S extends ExtraState = ExtraState> {
+    private onChange?;
+    private popListener?;
+    constructor(path?: Stateful<string>, onChange?: ChangeHandler<S>);
+    /** Current path (pathname + search + hash) */
+    path(): string;
+    /** Current state object */
+    state(): HistoryData<S>;
+    /** Navigate to a new path using pushState (no-op if same as current) */
+    navigate(path: string, state?: S, title?: string): void;
+    /** Replace current entry using replaceState (no-op if same as current) */
+    replace(path: string, state?: S, title?: string): void;
+    back(): void;
+    forward(): void;
+    /** Remove listeners */
+    destroy(): void;
+    private resolve;
+    private samePath;
+    private assertClient;
 }
 
 interface contentObj {
@@ -1081,7 +1109,7 @@ declare class miniStormy extends MainStorage<TabPath> {
 declare class Router extends htmlHead {
     storage: Stormy;
     protected base: string;
-    constructor(base?: string);
+    constructor(base?: string, index?: string);
     route<Q extends typeof doc<{}>>(path: string): (f: Q) => Q;
 }
 
@@ -1113,15 +1141,18 @@ interface renderConfig {
 }
 interface _Huntr {
     base?: string;
+    index?: string;
+    history?: boolean;
 }
 declare class minElements extends Router {
+    protected pushHistory: boolean;
     id: string;
     data: obj<any>;
-    protected path: Stateful<string>;
+    path: Stateful<string>;
     protected _root: Stateful<any[]>;
-    constructor(base?: string);
+    constructor(base?: string, index?: string, pushHistory?: boolean);
     Main(a: attr): Dom;
-    A(a: attr, ...ctx: ctx[]): Dom;
+    A(a: aAttr, ...ctx: ctx[]): Dom;
 }
 interface serverRender {
     path: string;
@@ -1129,10 +1160,12 @@ interface serverRender {
     data?: Record<string, any>;
 }
 declare class Huntr extends minElements {
-    constructor({ base }?: _Huntr);
+    huntr: Huntr;
+    constructor({ base, history, index }?: _Huntr);
     render(x?: renderConfig): Promise<(() => void) | (({ path, data, error }: serverRender) => Promise<string>)>;
     private init;
 }
+declare const Routes: (fn: (route: Huntr["route"]) => void) => (route: Huntr["route"]) => void;
 
-export { $, Huntr, IfClient, Meta, QState, Ref, State, StateHook, Stateful, Tabs, Time, __, addCSS, content, cssLoader, doc, dom, frag, log, socket, useRef, websocket };
+export { $, Huntr, IfClient, Meta, PathHistory, QState, Ref, Routes, State, StateHook, Stateful, Tabs, Time, __, addCSS, content, cssLoader, doc, dom, frag, log, socket, useRef, websocket };
 export type { $E, Elements, _$, aAttr, headAttr, maybePromise, serverRender };

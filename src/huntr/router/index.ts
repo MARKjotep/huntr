@@ -7,8 +7,11 @@ import { Stormy } from "../storage";
 export class Router extends htmlHead {
   storage = new Stormy();
   protected base: string;
-  constructor(base: string = "") {
+  constructor(base: string = "/", index: string = "") {
     super({ mark: true });
+
+    let pt = index ? `${index}/` : "";
+
     this.base = base ? (base.startsWith("/") ? base : `/${base}`) : "";
 
     const _base = this.base;
@@ -28,6 +31,13 @@ export class Router extends htmlHead {
           },
         ],
       },
+      meta: [
+        { charset: "utf-8" },
+        {
+          name: "viewport",
+          content: "width=device-width, initial-scale=1.0",
+        },
+      ],
     });
   }
   @bind route<Q extends typeof doc<{}>>(path: string) {
