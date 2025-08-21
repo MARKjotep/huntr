@@ -3,7 +3,6 @@ import { Wizard } from "../oz";
 import { Stateful } from "../../stateful";
 import { dom, Dom, Elements, renderDom } from "..";
 import { CATT } from "../cat";
-import { Huntr } from "../../huntr_back";
 
 const TAGS = [
   "area",

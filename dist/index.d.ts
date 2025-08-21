@@ -1,9 +1,15 @@
+type ModuleLike = {
+    [Symbol.toStringTag]: "Module";
+    default?: unknown;
+    [key: string]: unknown;
+};
 declare const isFN: (v: any) => v is Function;
 declare const isAsync: (v: any) => v is Function;
 declare const isPromise: (v: any) => v is Function;
 declare const isNumber: (value: any) => boolean;
 declare const isObject: (val: any) => val is Record<string, any>;
 declare const isPlainObject: (value: any) => boolean;
+declare const isModule: (obj: any) => obj is ModuleLike;
 declare const isArraybuff: (val: any) => val is string | ArrayBuffer | Uint8Array<ArrayBufferLike>;
 declare const isClassOrId: (k: string) => boolean;
 declare const isBool: (v: any) => v is boolean;
@@ -19,6 +25,7 @@ declare const isInt: (str: string) => boolean;
 declare const isWindow: boolean;
 declare const isNotWindow: boolean;
 
+type is_ModuleLike = ModuleLike;
 declare const is_isArr: typeof isArr;
 declare const is_isArraybuff: typeof isArraybuff;
 declare const is_isAsync: typeof isAsync;
@@ -27,6 +34,7 @@ declare const is_isClassOrId: typeof isClassOrId;
 declare const is_isDefined: typeof isDefined;
 declare const is_isFN: typeof isFN;
 declare const is_isInt: typeof isInt;
+declare const is_isModule: typeof isModule;
 declare const is_isNotNull: typeof isNotNull;
 declare const is_isNotWindow: typeof isNotWindow;
 declare const is_isNull: typeof isNull;
@@ -40,29 +48,11 @@ declare const is_isStr: typeof isStr;
 declare const is_isUndefined: typeof isUndefined;
 declare const is_isWindow: typeof isWindow;
 declare namespace is {
-  export {
-    is_isArr as isArr,
-    is_isArraybuff as isArraybuff,
-    is_isAsync as isAsync,
-    is_isBool as isBool,
-    is_isClassOrId as isClassOrId,
-    is_isDefined as isDefined,
-    is_isFN as isFN,
-    is_isInt as isInt,
-    is_isNotNull as isNotNull,
-    is_isNotWindow as isNotWindow,
-    is_isNull as isNull,
-    is_isNum as isNum,
-    is_isNumber as isNumber,
-    is_isObj as isObj,
-    is_isObject as isObject,
-    is_isPlainObject as isPlainObject,
-    is_isPromise as isPromise,
-    is_isStr as isStr,
-    is_isUndefined as isUndefined,
-    is_isWindow as isWindow,
-  };
+  export { is_isArr as isArr, is_isArraybuff as isArraybuff, is_isAsync as isAsync, is_isBool as isBool, is_isClassOrId as isClassOrId, is_isDefined as isDefined, is_isFN as isFN, is_isInt as isInt, is_isModule as isModule, is_isNotNull as isNotNull, is_isNotWindow as isNotWindow, is_isNull as isNull, is_isNum as isNum, is_isNumber as isNumber, is_isObj as isObj, is_isObject as isObject, is_isPlainObject as isPlainObject, is_isPromise as isPromise, is_isStr as isStr, is_isUndefined as isUndefined, is_isWindow as isWindow };
+  export type { is_ModuleLike as ModuleLike };
 }
+
+declare const IfClient: <T>(fn: () => T) => T | undefined;
 
 type V = string | number | boolean;
 type obj$1<T> = Record<string, T>;
@@ -188,30 +178,36 @@ interface headAttr {
     link?: link<string>[];
     script?: script<string | boolean>[];
     css?: string[] | string;
+    js?: string[] | string;
     description?: string;
 }
-declare class head implements headAttr {
+declare abstract class head implements headAttr {
     title?: string;
     description?: string;
-    base?: base<string>[];
+    css?: string[] | string;
+    js?: string[] | string;
     meta?: meta<string>[] | Meta;
     link?: link<string>[];
     script?: script<string | boolean>[];
-    css?: string[] | string;
 }
 type CSSinT = {
     [P in keyof CSSStyleDeclaration]?: V;
 } & {
     [key: string]: V;
 };
-type headType = Mapper<keyof head, any>;
+type headType = Mapper<keyof headAttr, any>;
+interface hHeadCFG {
+    initial?: headType;
+    mark?: boolean;
+    push?: obj$1<any>;
+}
 declare class htmlHead {
     lang: string;
     htmlHead: headType;
-    head: (heads?: headAttr) => void;
-    constructor();
+    head: (heads?: Omit<headAttr, "base">) => void;
+    constructor({ mark, push }?: hHeadCFG);
 }
-declare const cssLoader: (vv: link<string>) => Promise<unknown> | undefined;
+declare const cssLoader: (vv: link<string>) => Promise<HTMLLinkElement | undefined>;
 declare function addCSS(selector: string, rules?: CSSinT): void;
 
 declare class MinStorage {
@@ -310,14 +306,14 @@ declare class Formatteer {
     get pr(): string;
 }
 
-type hookFN<T extends any[]> = (...args: statefulValue<T>) => void;
+type hookFN<T extends any[]> = (...args: statefulValue<T>) => maybePromise<void>;
 interface stateCFG {
     id?: string;
     init?: boolean;
 }
 declare function StateHook<T extends any[]>(callback: hookFN<T>, statefuls: [...{
     [K in keyof T]: Stateful<T[K]>;
-}], { id, init }?: stateCFG): () => void;
+}], { id, init }?: stateCFG): Promise<() => void>;
 
 type statefulValue<T extends any[]> = {
     [K in keyof T]: T[K] extends Stateful<infer U> ? U : T[K];
@@ -975,7 +971,7 @@ declare class Dom {
     ctx: ctx[];
     constructor(tag: string, attr: attr, ctx: ctx[]);
 }
-declare function dom$1(tag: string | ((attr: attr, ...ctx: ctx[]) => Dom), attr?: attr | null, ...ctx: ctx[]): Dom;
+declare function dom(tag: string | ((attr: attr, ...ctx: ctx[]) => Dom), attr?: attr | null, ...ctx: ctx[]): Dom;
 declare const frag: (attr: attr, ...ctx: Dom[]) => Dom;
 declare global {
     type events<T extends Elements = HTMLElement> = {
@@ -994,97 +990,149 @@ declare global {
     }
 }
 
-declare class BasePath<T> extends MinStorage {
-    id: string;
-    cls: T;
-    constructor(path: string, id: string, cls: T);
+interface docObj {
+    args?: obj<any>;
+    data?: obj<any>;
 }
-declare class ClientPath extends BasePath<typeof doc> {
+declare class doc<T extends docObj = obj<obj<any>>> extends head {
+    path: string;
+    data: T["data"];
+    args: T["args"];
+    fetch?(): maybePromise<obj<any>>;
+    head?(): maybePromise<void>;
+    body?(): maybePromise<any>;
+}
+
+interface contentObj {
+    args?: obj<any>;
+    data?: obj<any>;
+}
+declare class content<T extends contentObj = obj<obj<string>>> {
+    path: string;
+    data: T["data"];
+    args: T["args"];
+    body?(): maybePromise<any>;
+}
+
+declare class websocket<T = Record<string, any>> {
+    path: string;
+    protected args: T;
+    route: string;
+    ws: WebSocket;
+    isConnected: Stateful<boolean>;
+    data: T;
+    constructor(path: string, args?: T);
+    protected open(event: Event): Promise<void> | void;
+    protected message(event: MessageEvent): Promise<void> | void;
+    protected close(event: CloseEvent): Promise<void> | void;
+    protected error(event: Event): Promise<void> | void;
+    get connect(): this;
+    get reconnect(): this;
+    get disconnect(): this;
+    /**
+     * code:
+     * * 0 - CONNECTING: The connection is being established.
+     * * 1 - OPEN: The connection is open and ready to communicate.
+     * * 2 - CLOSING: The connection is in the process of closing.
+     * * 3 - CLOSED: The connection has been closed or could not be opened.
+     */
+    get state(): number;
+    set send(message: string | ArrayBufferLike | Blob | ArrayBufferView);
+}
+declare class socket {
+    protected Huntr: Huntr;
+    constructor(Huntr: Huntr);
+    load(_path: string): Promise<websocket<Record<string, any>> | undefined>;
+    unload(_path: string): void;
+}
+
+declare class BasePath<T> extends MinStorage {
+    cls: T;
+    constructor(path: string, cls: T);
+}
+declare class ClientPath extends BasePath<typeof doc<{}>> {
 }
 declare class SocketPath extends BasePath<typeof websocket> {
 }
-declare class Stormy {
-    storage: Storage<ClientPath>;
-    errorStorage: Storage<ClientPath>;
-    wssStorage: Storage<SocketPath>;
-    constructor();
-    getRoute(path: string): [ClientPath | undefined, Record<string, string>];
-    getWss(path: string): [SocketPath | undefined, Record<string, string>];
-    getError(code: number): [ClientPath | undefined, Record<string, string>];
+declare class MainStorage<T extends InstanceType<typeof BasePath>> {
+    storage: Storage<T>;
+    error: Storage<T>;
 }
-/**
- * Extend the storage
- */
-declare class Router extends htmlHead {
-    storage: Stormy;
-    base: string;
-    protected _root: Stateful<any[]>;
-    path: Stateful<string>;
-    protected lastPath: Stateful<string>;
-    /** --------------------
-     * @route
-     * string | int | float | file | uuid
-     * - /url/\<string:hell>
-     */
-    route: (path: string) => <Q extends typeof doc>(f: Q) => Q;
-    error: (...codes: number[]) => <Q extends typeof doc>(f: Q) => Q;
-    wss: (path: string) => <Q extends typeof websocket>(f: Q) => Q;
-    A: (a: aAttr, ...ctx: ctx[]) => dom;
-    constructor(base?: string);
+declare class Stormy extends MainStorage<ClientPath> {
+    wss: Storage<SocketPath>;
+    setRoute(path: string, _doc: typeof doc<{}>): void;
+    getRoute(path: string, error?: number): doc<{}>;
+    setWss(path: string): void;
+    getWss(path: string): [SocketPath | undefined, Record<string, string>];
+    setError(code: number, _doc: typeof doc<{}>): void;
+    getError(code?: number): [ClientPath | undefined, Record<string, string>];
+}
+declare class TabPath extends BasePath<typeof content<{}>> {
+}
+declare class miniStormy extends MainStorage<TabPath> {
+    setRoute(path: string, _doc: typeof content<{}>): void;
+    getRoute(path: string, error?: number): content<{}>;
+    setWss(path: string): void;
+    getWss(path: string): void;
+    setError(code: number, _doc: typeof doc<{}>): void;
+    getError(code?: number): [TabPath | undefined, Record<string, string>];
 }
 
+declare class Router extends htmlHead {
+    storage: Stormy;
+    protected base: string;
+    constructor(base?: string);
+    route<Q extends typeof doc<{}>>(path: string): (f: Q) => Q;
+}
+
+interface mtab {
+    tab: string;
+}
+declare class minElements$1 {
+    id: string;
+    path: Stateful<string>;
+    _root: Stateful<any[]>;
+    Main(a: attr): Dom;
+    Button(a: attr & mtab, ...ctx: ctx[]): Dom;
+}
+declare class Tabs extends minElements$1 {
+    storage: miniStormy;
+    constructor();
+    tab<Q extends typeof content<{}>>(path: string): (f: Q) => Q;
+    load(tab: string, data?: obj<string>): Promise<void>;
+}
+
+/**
+ * To make sure only one Huntr is running
+ */
 interface renderConfig {
     class?: string | string[];
     id?: string;
     data?: any;
-    lang?: string;
+    isDev?: boolean;
 }
-
+interface _Huntr {
+    base?: string;
+}
+declare class minElements extends Router {
+    id: string;
+    data: obj<any>;
+    protected path: Stateful<string>;
+    protected _root: Stateful<any[]>;
+    constructor(base?: string);
+    Main(a: attr): Dom;
+    A(a: attr, ...ctx: ctx[]): Dom;
+}
 interface serverRender {
     path: string;
-    status?: number;
+    error?: number;
     data?: Record<string, any>;
 }
-interface hunterConfig {
-    base?: string;
-    pushState?: boolean;
-}
-type huntrRender = (x: serverRender) => maybePromise<string | undefined>;
-declare class Huntr extends Router {
-    render: (x?: renderConfig) => maybePromise<huntrRender>;
-    huntr: this;
-    load: (path: string) => maybePromise<void>;
-    root: (id?: string) => Stateful<any[]>;
-    constructor(a?: hunterConfig);
+declare class Huntr extends minElements {
+    constructor({ base }?: _Huntr);
+    render(x?: renderConfig): Promise<(() => void) | (({ path, data, error }: serverRender) => Promise<string>)>;
+    private init;
 }
 
-declare class websocket<T = Record<string, any>> {
-    static route: string;
-}
-
-type doc_t = {
-    args?: obj<string>;
-    data?: obj<string>;
-};
-type allT = Huntr | dom | dom[] | string;
-declare class doc<T extends doc_t = obj<any>> extends head {
-    path: string;
-    args: T["args"];
-    id: string;
-    status?: number | undefined;
-    import?: any;
-    lang: string;
-    static route: string;
-    fetch?(): Promise<obj<any>>;
-    head?(): maybePromise<void>;
-    body?(): maybePromise<allT>;
-    private _data;
-    constructor(path: string, args?: T["args"], id?: string, status?: number | undefined);
-    set data(data: obj<any>);
-    get data(): T["data"];
-}
-
-declare const IfClient: <T>(fn: () => T) => T | undefined;
-
-export { $, Huntr, IfClient, Meta, QState, Ref, State, StateHook, Stateful, Time, __, addCSS, cssLoader, doc, dom$1 as dom, frag, log, useRef, websocket };
+export { $, Huntr, IfClient, Meta, QState, Ref, State, StateHook, Stateful, Tabs, Time, __, addCSS, content, cssLoader, doc, dom, frag, log, socket, useRef, websocket };
 export type { $E, Elements, _$, aAttr, headAttr, maybePromise, serverRender };
