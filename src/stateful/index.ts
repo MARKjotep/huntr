@@ -13,6 +13,7 @@ import { Elements, getElementById } from "../dom";
 import { StateHook, hookFN, hookM, handleHooks } from "./hook";
 
 export { StateHook };
+
 type statesM<T> = Mapper<string, (this: Elements, arg: T) => any>;
 
 export type statefulValue<T extends any[]> = {
